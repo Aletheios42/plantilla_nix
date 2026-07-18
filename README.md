@@ -8,7 +8,6 @@ Base template for new repositories.
 .
 ├── flake.nix                        # Nix devShell, con los paquetes adecuados por perfil
 ├── flake.lock                       # Pinned nixpkgs
-├── .envrc                           # direnv activador del flake
 ├── makefile                         # make help
 └── .github/
     ├── CODEOWNERS.md
@@ -25,13 +24,11 @@ rm -rf .git
 git init
 git add .
 git commit -m "chore: init from template"
-make env
 ```
 
 ## Requirements
 
 - Nix with flakes enabled
-- direnv
 
 ## Customization
 

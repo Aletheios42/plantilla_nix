@@ -1,11 +1,12 @@
 ## Tipo de cambio
 
-- [ ] `feat` — New feature
-- [ ] `fix` — Bug fix
-- [ ] `refactor` — Code improvement (no feature change)
-- [ ] `docs` — Documentation only
-- [ ] `test` — Adding or updating tests
-- [ ] `chore` — Tooling, CI, dependencies
+* [ ] `feat` — Nueva característica
+* [ ] `fix` — Resolución de bug
+* [ ] `refactor` — Mejora del código (sin cambios en las características).
+* [ ] `docs` — Solo documentación.
+* [ ] `test` — Añadir o actualizar pruebas.
+* [ ] `chore` — Herramientas, CI, dependencias.
+
 
 ## Descriptción
 
@@ -18,27 +19,26 @@
 Issues que cierra: #
 
 
-## Screenshots / Recordings
+## Capturas de pantalla / Grabaciones
 
-<!-- For UI changes: before/after screenshots or a short video. Delete if not applicable. -->
+<!-- Para cambios en la UI: Video/Pantallazo con el antes y el después. Saltar si no aplica -->
 
-## Testeo
-
-Antes de abrir esta PR, confirma que has ejecutado el pipeline de Dagger en local.
-
-- [ ] **Dagger Local:** He ejecutado `make check` (o `go run ./ci`) y todos los pasos han terminado en verde.
-- [ ] **Linting:** El código sigue las normas de estilo (no hay errores de ESLint ni golangci-lint).
-- [ ] **Tests:** Los tests unitarios de la lógica afectada han sido creados y pasan correctamente.
+## Pruebas
 
 > [!IMPORTANT]
-> No se aceptarán PRs que no hayan pasado la validación local de Dagger. Si el CI de GitHub falla por algo que podrías haber visto en local, la PR será cerrada automáticamente.
+> No se aceptarán PRs que no hayan pasado la pipeline local.
+> Si el CI de GitHub falla por algo que podrías haber visto en local, la PR será cerrada automáticamente.
+
+* [ ] **Linting:** El código sigue las normas de estilo (el linter definido en `manifest/ci.scm` no reporta errores).
+* [ ] **Pruebas:** Las pruebas unitarias de la lógica afectada han sido creadas y pasan correctamente.
 
 <!-- Descripción sobre como se testea este cambio (Ayuda para el revisor) -->
 
 
-## Checklist
+## Lista de verificación
 
-- [ ] He hecho fetch y rebase de la rama `main` antes de pushear
-- [ ] He actualizado la documentación.
-- [ ] No secretos o credenciales en el código
-- [ ] My PR cumple con: [Conventional Commits](https://www.conventionalcommits.org/)
+* [ ] He hecho fetch y rebase de la rama antes de pushear.
+* [ ] He actualizado la documentación.
+* [ ] Sin secretos ni credenciales en el código.
+* [ ] Mi PR cumple con: [Conventional Commits](https://www.conventionalcommits.org/)
+
