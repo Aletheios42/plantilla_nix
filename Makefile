@@ -1,4 +1,4 @@
-.PHONY: help prod dev debug ci ci-act lint test build format coverage clean update docker-build docker-run release-dry-run audit dev-up dev-down deploy-dev deploy-prod docs-serve docs-build
+.PHONY: help prod dev debug ci ci-act lint test build format coverage clean update docker-build docker-run release-dry-run audit dev-up dev-down deploy-dev deploy-prod docs-serve docs-build secrets-init secrets-edit secrets-rekey
 
 LINT_CMD ?=
 TEST_CMD ?=
@@ -65,6 +65,26 @@ release-dry-run: check ## Simula el release para ver la version que se generaria
 audit: check ## Auditoria de seguridad local del repo con Trivy
 	@nix develop .#ci --command bash -c 'trivy fs --severity HIGH,CRITICAL .'
 
+secrets-init: check ## Genera par de claves Age para SOPS
+	@if [ -f ~/.config/sops/age/keys.txt ]; then \
+		echo "Ya existe ~/.config/sops/age/keys.txt"; \
+	else \
+		mkdir -p ~/.config/sops/age; \
+		nix develop .#ci --command bash -c 'age-keygen -o ~/.config/sops/age/keys.txt'; \
+		echo "Keys generadas en ~/.config/sops/age/keys.txt"; \
+		echo; \
+		echo "Tu clave publica:"; \
+		nix develop .#ci --command bash -c 'age-keygen -y ~/.config/sops/age/keys.txt'; \
+		echo; \
+		echo "Copia la linea 'age1...' y añadela a .sops.yaml en el array 'age'."; \
+	fi
+
+secrets-edit: check ## Edita el archivo de secretos de desarrollo
+	nix develop .#ci --command bash -c 'sops secrets/dev.yaml'
+
+secrets-rekey: check ## Re-encripta todos los secretos para las claves actuales
+	nix develop .#ci --command bash -c 'find secrets/ -name "*.yaml" ! -name ".gitkeep" -exec sops updatekeys {} \;'
+
 dev-up: check ## Crea el cluster k3d de desarrollo
 	@nix develop .#ci --command bash -c 'k3d cluster create dev-cluster --config k3d-config.yaml'
 
@@ -72,10 +92,14 @@ dev-down: check ## Destruye el cluster k3d de desarrollo
 	@nix develop .#ci --command bash -c 'k3d cluster delete dev-cluster'
 
 deploy-dev: check ## Despliega en el cluster k3d local (kluctl -t dev)
-	@nix develop .#ci --command bash -c 'kluctl deploy -t dev -y'
+	@test -f secrets/dev.yaml && \
+		nix develop .#ci --command bash -c 'sops exec --decrypt secrets/dev.yaml -- kluctl deploy -t dev -y' || \
+		nix develop .#ci --command bash -c 'kluctl deploy -t dev -y'
 
 deploy-prod: check ## Despliega en produccion (kluctl -t prod)
-	@nix develop .#ci --command bash -c 'kluctl deploy -t prod -y'
+	@test -f secrets/prod.yaml && \
+		nix develop .#ci --command bash -c 'sops exec --decrypt secrets/prod.yaml -- kluctl deploy -t prod -y' || \
+		nix develop .#ci --command bash -c 'kluctl deploy -t prod -y'
 
 docs-serve: check ## Sirve la documentacion localmente (mkdocs serve)
 	@nix develop .#dev --command bash -c 'mkdocs serve -a localhost:8000'

@@ -15,6 +15,7 @@
 | [semantic-release](https://semantic-release.gitbook.io) | Versionado automatico basado en Conventional Commits |
 | [Docker](https://docker.com) + ghcr.io | Build y push de imagenes OCI |
 | [kluctl](https://kluctl.io) | Deploy GitOps push-based al cluster Kubernetes |
+| [SOPS](https://github.com/getsops/sops) + [Age](https://github.com/FiloSottile/age) | Secretos encriptados en el repo, desencriptados en deploy |
 | [k3d](https://k3d.io) | Cluster Kubernetes local para desarrollo |
 | [CodeQL](https://codeql.github.com) | Analisis de seguridad estatico (SAST) |
 | [Trivy](https://trivy.dev) | Escaneo de vulnerabilidades en imagenes Docker |
@@ -52,12 +53,14 @@
 │   ├── index.md
 │   └── getting-started.md
 ├── .releaserc.yaml                   # Configuracion de semantic-release
+├── .sops.yaml                         # Configuracion de SOPS (claves Age)
 ├── renovate.json                     # Configuracion de Renovate
 ├── CHANGELOG.md                      # Generado automaticamente por semantic-release
 ├── CODE_OF_CONDUCT.md
 ├── CONTRIBUTING.md
 ├── LICENSE
 ├── Makefile                          # make ci, make dev, make docs-serve, etc.
+├── secrets/                          # Secretos encriptados con SOPS + Age
 ├── SECURITY.md
 ├── flake.lock
 └── flake.nix                         # DevShells: dev, prod, ci
@@ -126,6 +129,62 @@ El reporte de cobertura se genera con `make coverage` (define `COVERAGE_CMD` apu
 
 Para repositorios privados, configura el secret `CODECOV_TOKEN`. En repos publicos el token es opcional.
 
+## Gestion de secretos (SOPS + Age)
+
+Los secretos del proyecto se gestionan con [SOPS](https://github.com/getsops/sops) y [Age](https://github.com/FiloSottile/age). Se almacenan encriptados en `secrets/` y se commitean al repositorio sin riesgo — solo quienes tengan la clave privada Age correspondiente pueden desencriptarlos.
+
+### Configuracion inicial
+
+```bash
+make secrets-init
+```
+
+Esto genera tu par de claves Age en `~/.config/sops/age/keys.txt` y te muestra la clave publica. Copiala y añadela a `.sops.yaml`:
+
+```yaml
+creation_rules:
+  - path_regex: secrets/.*\.yaml$
+    age: >-
+      age1...TU_CLAVE_PUBLICA     # <-- tu clave publica
+      age1...CLAVE_CI              # <-- clave del CI (opcional)
+```
+
+Para que otros colaboradores puedan desencriptar, añade sus claves publicas a `.sops.yaml` y ejecuta `make secrets-rekey`.
+
+### Crear secretos de desarrollo
+
+```bash
+make secrets-edit
+```
+
+Esto abre `secrets/dev.yaml` con SOPS. Las claves de primer nivel se exportan como variables de entorno durante el deploy:
+
+```yaml
+database_url: postgres://...
+jwt_secret: supersecure
+```
+
+### Despliegue con secretos
+
+Los targets `deploy-dev` y `deploy-prod` detectan automaticamente si existe un archivo de secretos:
+
+```bash
+make deploy-dev     # Si secrets/dev.yaml existe → sops exec --decrypt → kluctl deploy
+make deploy-prod    # Si secrets/prod.yaml existe → sops exec --decrypt → kluctl deploy
+```
+
+En los manifiestos de kluctl, referencias las variables con `${database_url}`, `${jwt_secret}`, etc.
+
+### CI/CD
+
+Para que GitHub Actions pueda desencriptar, genera un keypair dedicado para CI:
+
+1. `age-keygen -o ci-age-key.txt`
+2. Guarda la clave privada como secret `SOPS_AGE_KEY` en el repositorio
+3. Añade la clave publica a `.sops.yaml` y ejecuta `make secrets-rekey`
+
+SOPS detecta automaticamente `SOPS_AGE_KEY` del entorno en el pipeline.
+
 ## Seguridad
 
 El pipeline incluye dos capas de escaneo:
@@ -172,10 +231,12 @@ git add . && git commit -m "chore: init from template"
 6. `k3d-config.yaml` — ajusta el nombre y configuracion del cluster de desarrollo.
 7. `.github/CODEOWNERS.md` — actualiza `@Aletheios42` con los revisores reales.
 8. `.releaserc.yaml` — ajusta `branches` si usas ramas adicionales (`next`, `beta`, `alpha`).
-9. `CODE_OF_CONDUCT.md` — actualiza `[TU_EMAIL]@ejemplo.com`.
-10. `SECURITY.md` — actualiza `[TU_EMAIL]@ejemplo.com`.
-11. `renovate.json` — instala la [GitHub App](https://github.com/apps/renovate) en el repo.
-12. Codecov — asegura que `CODECOV_TOKEN` este configurado en los secrets del repositorio (necesario para repos privados).
+9. `.sops.yaml` — reemplaza `age1...TU_CLAVE_PUBLICA` con tu clave publica Age (generada con `make secrets-init`).
+10. `secrets/` — crea `secrets/dev.yaml` con `make secrets-edit`; anade los secretos que necesite tu app.
+11. `CODE_OF_CONDUCT.md` — actualiza `[TU_EMAIL]@ejemplo.com`.
+12. `SECURITY.md` — actualiza `[TU_EMAIL]@ejemplo.com`.
+13. `renovate.json` — instala la [GitHub App](https://github.com/apps/renovate) en el repo.
+14. Codecov — asegura que `CODECOV_TOKEN` este configurado en los secrets del repositorio (necesario para repos privados).
 
 ### Comandos disponibles
 
@@ -195,8 +256,11 @@ make release-dry-run # Simula el release para ver la version
 make audit          # Auditoria de seguridad con Trivy (modo filesystem)
 make dev-up         # Crea cluster k3d local
 make dev-down       # Destruye cluster k3d local
-make deploy-dev     # Despliega en cluster k3d (kluctl -t dev)
-make deploy-prod    # Despliega en produccion (kluctl -t prod)
+make deploy-dev     # Despliega en cluster k3d (con secretos si existen)
+make deploy-prod    # Despliega en produccion (con secretos si existen)
+make secrets-init   # Genera par de claves Age para SOPS
+make secrets-edit   # Edita secretos de desarrollo (sops)
+make secrets-rekey  # Re-encripta todos los secretos
 make docs-serve     # Sirve documentacion localmente (localhost:8000)
 make docs-build     # Genera HTML de documentacion
 ```
