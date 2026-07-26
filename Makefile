@@ -1,4 +1,4 @@
-.PHONY: help env dev debug ci
+.PHONY: help prod dev debug ci ci-act lint test build
 
 LINT_CMD ?=
 TEST_CMD ?=
@@ -16,7 +16,7 @@ help: ## Muestra esta ayuda
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk -F'##' '{printf "\033[32m%-15s\033[0m %s\n", $$1, $$2}'
 
 check:
-	@command -v nix >/dev/null || { echo "Instala nix - https://nixos.org/download.html"; exit 1; }}
+	@command -v nix >/dev/null || { echo "Instala nix - https://nixos.org/download.html"; exit 1; }
 
 prod: check ## Shell de produccion
 	@exec nix develop .#prod

@@ -7,21 +7,19 @@
       forAllSystems = f: nixpkgs.lib.genAttrs systems f;
     in {
       devShells = forAllSystems (system: let
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs = import nixpkgs { inherit system; config.allowUnfree = true; };
         commonPackages = [ ];
       in {
         prod = pkgs.mkShell {
           packages = commonPackages ++ [ ];
           env.profile = "PROD";
         };
-
         dev = pkgs.mkShell {
           packages = commonPackages ++ [ ];
           env.profile = "DEV";
         };
-
         ci = pkgs.mkShell {
-          packages = commonPackages ++ [ ];
+          packages = commonPackages ++ [ pkgs.act ];
           env.profile = "CI";
         };
       });
