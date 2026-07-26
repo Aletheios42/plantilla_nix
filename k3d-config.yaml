@@ -1,0 +1,14 @@
+apiVersion: k3d.io/v1alpha4
+kind: Simplified
+metadata:
+  name: dev-cluster
+servers: 1
+agents: 1
+options:
+  k3d:
+    wait: true
+  k3s:
+    extraArgs:
+      - arg: --disable=traefik
+        nodeFilters:
+          - server:*

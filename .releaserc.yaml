@@ -1,0 +1,58 @@
+# Branches that trigger releases. Order matters for channel resolution.
+branches:
+  - master                      # stable releases -> latest dist-tag
+  - name: next
+    prerelease: true           # publishes as next@<version>-next.N
+  - name: beta
+    prerelease: true
+  - name: alpha
+    prerelease: true
+
+# CI-only safety switches
+ci: true                       # fail if not running in a recognized CI env
+dryRun: false                  # set true to preview version/changelog w/o publishing
+debug: false
+
+# Custom tag format (default: v${version})
+tagFormat: "v${version}"
+
+plugins:
+  # 1. Determine release type (major/minor/patch) from Conventional Commits
+  - - "@semantic-release/commit-analyzer"
+    - preset: angular
+      releaseRules:
+        - type: docs
+          scope: README
+          release: patch
+        - type: refactor
+          release: patch
+        - type: style
+          release: false
+      parserOpts:
+        noteKeywords:
+          - BREAKING CHANGE
+          - BREAKING CHANGES
+
+  # 2. Generate release notes body from commits
+  - - "@semantic-release/release-notes-generator"
+    - preset: angular
+      writerOpts:
+        commitsSort: ["subject", "scope"]
+
+  # 3. Update / prepend CHANGELOG.md
+  - - "@semantic-release/changelog"
+    - changelogFile: CHANGELOG.md
+      changelogTitle: "# Changelog"
+
+  # 3.5. Commit CHANGELOG.md back to the repository
+  - - "@semantic-release/git"
+    - assets:
+        - CHANGELOG.md
+      message: "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
+
+  # 4. Create a GitHub Release
+  - - "@semantic-release/github"
+    - successComment: "This is included in version ${nextRelease.version}"
+      failComment: false
+      labels:
+        - released

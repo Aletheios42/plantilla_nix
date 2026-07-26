@@ -1,0 +1,20 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "labels": ["dependencies"],
+  "schedule": ["on the first day of the month"],
+  "automerge": false,
+  "prHourlyLimit": 5,
+  "packageRules": [
+    {
+      "groupName": "github-actions",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["major", "minor", "patch"]
+    },
+    {
+      "groupName": "nix",
+      "matchManagers": ["nix"],
+      "matchUpdateTypes": ["major", "minor", "patch", "pin", "digest"]
+    }
+  ]
+}

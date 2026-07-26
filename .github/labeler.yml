@@ -1,0 +1,39 @@
+area:app:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'src/**'
+
+area:ci:
+  - changed-files:
+    - any-glob-to-any-file:
+      - '.github/workflows/*'
+      - 'Makefile'
+      - 'flake.*'
+
+area:docs:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'docs/**'
+      - '**.md'
+      - 'README.md'
+
+area:docker:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'Dockerfile*'
+      - '.dockerignore'
+      - 'docker-compose*'
+
+area:nix:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'flake.*'
+      - '*.nix'
+
+area:test:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'tests/**'
+      - '**/*test*'
+      - '**/*spec*'
+      - '**/__tests__/**'

@@ -37,8 +37,8 @@ Issues que cierra: #
 
 ## Lista de verificación
 
+* [ ] Mi PR cumple con: [Conventional Commits](https://www.conventionalcommits.org/)
 * [ ] He hecho fetch y rebase de la rama antes de pushear.
 * [ ] He actualizado la documentación.
 * [ ] Sin secretos ni credenciales en el código.
-* [ ] Mi PR cumple con: [Conventional Commits](https://www.conventionalcommits.org/)
 

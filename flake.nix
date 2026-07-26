@@ -9,17 +9,29 @@
       devShells = forAllSystems (system: let
         pkgs = import nixpkgs { inherit system; config.allowUnfree = true; };
         commonPackages = [ ];
+        mkdocs-with-material = pkgs.python3.withPackages (ps: [ ps.mkdocs-material ps.mkdocs ]);
       in {
         prod = pkgs.mkShell {
-          packages = commonPackages ++ [ ];
+          packages = commonPackages ++ [
+            mkdocs-with-material
+          ];
           env.profile = "PROD";
         };
         dev = pkgs.mkShell {
-          packages = commonPackages ++ [ ];
+          packages = commonPackages ++ [
+            mkdocs-with-material
+          ];
           env.profile = "DEV";
         };
         ci = pkgs.mkShell {
-          packages = commonPackages ++ [ pkgs.act ];
+          packages = commonPackages ++ [
+            pkgs.act
+            pkgs.semantic-release
+            pkgs.kluctl
+            pkgs.k3d
+            pkgs.trivy
+            mkdocs-with-material
+          ];
           env.profile = "CI";
         };
       });

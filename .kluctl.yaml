@@ -1,0 +1,18 @@
+# Kluctl project configuration
+# Docs: https://kluctl.io/docs/kluctl/reference/kluctl-project/
+
+targets:
+  - name: dev
+    context: k3d-dev-cluster
+  - name: prod
+    context: production-cluster
+
+# Kubernetes client args applied to all targets.
+# args:
+#   --insecure-skip-tls-verify: true
+
+# Discriminator used to annotate deployed resources (default: kluctl.io/tag).
+# discriminator: kluctl.io/tag
+
+# Deployments are defined in subdirectories (e.g., ./deploy/).
+# Each deployment dir contains a deployment.yaml.
